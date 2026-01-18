@@ -1,0 +1,26 @@
+{
+  "name": "ecom-utils",
+  "version": "1.0.0",
+  "description": "Librairie TypeScript utilitaire pour e-commerce : panier, promotions, TVA, devises",
+  "main": "dist/index.js",
+  "types": "dist/types/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "keywords": ["ecommerce", "cart", "discount", "typescript"],
+  "author": "Céline Harbane <harbaneceline@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/celineharbane/ecom-utils.git"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  }
+}
