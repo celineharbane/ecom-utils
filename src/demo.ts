@@ -1,95 +1,107 @@
 /**
- * DEMO - Voir ecom-utils en action
+ * DEMO COMPLÈTE - Tous les modules ecom-utils
  */
 
 import { Cart } from './cart/Cart.js';
+import { formatPrice, convertCurrency, getCurrencySymbol } from './currency/currency.js';
+import { calculateTax, getTaxRate, getCountryName } from './tax/tax.js';
+import { calculateShipping, formatDeliveryTime } from './shipping/shipping.js';
 import type { Product, Discount } from './types.js';
 
 // ============================================
-// 1. CRÉER DES PRODUITS
+// 1. MODULE CURRENCY - Formatage des prix
 // ============================================
 
-const tshirt: Product = {
-  id: '1',
-  name: 'T-shirt Premium',
-  price: 29.90,
-  currency: 'EUR',
-  status: 'available',
-  stock: 100,
-};
+console.log('💰 MODULE CURRENCY');
+console.log('═'.repeat(50));
 
-const jean: Product = {
-  id: '2',
-  name: 'Jean Slim',
-  price: 59.90,
-  currency: 'EUR',
-  status: 'available',
-  stock: 50,
-};
+console.log('Formatage des prix :');
+console.log(`  France:    ${formatPrice(29.90, 'EUR')}`);
+console.log(`  USA:       ${formatPrice(29.90, 'USD')}`);
+console.log(`  UK:        ${formatPrice(29.90, 'GBP')}`);
 
-const sneakers: Product = {
-  id: '3',
-  name: 'Sneakers Blanches',
-  price: 89.90,
-  currency: 'EUR',
-  status: 'available',
-  stock: 30,
-};
+console.log('\nConversion de devises :');
+console.log(`  100€ en USD: ${formatPrice(convertCurrency(100, 'EUR', 'USD'), 'USD')}`);
+console.log(`  100€ en GBP: ${formatPrice(convertCurrency(100, 'EUR', 'GBP'), 'GBP')}`);
+console.log(`  100$ en EUR: ${formatPrice(convertCurrency(100, 'USD', 'EUR'), 'EUR')}`);
 
 // ============================================
-// 2. CRÉER UN PANIER
+// 2. MODULE TAX - TVA par pays
 // ============================================
 
-console.log('🛒 Création du panier...\n');
+console.log('\n\n🧾 MODULE TAX');
+console.log('═'.repeat(50));
 
-const cart = new Cart({
-  currency: 'EUR',
-  taxRate: 20,
-  freeShippingThreshold: 100,
-  shippingCost: 4.90,
+console.log('Taux de TVA standard :');
+const countries = ['FR', 'DE', 'BE', 'ES', 'IT', 'GB', 'CH'];
+countries.forEach(code => {
+  console.log(`  ${getCountryName(code)}: ${getTaxRate(code)}%`);
+});
+
+console.log('\nTaux réduits (alimentation) :');
+console.log(`  France:  ${getTaxRate('FR', 'food')}%`);
+console.log(`  Allemagne: ${getTaxRate('DE', 'food')}%`);
+console.log(`  UK: ${getTaxRate('GB', 'food')}% (exonéré)`);
+
+console.log('\nCalcul TVA sur 100€ :');
+const taxFR = calculateTax(100, 'FR');
+const taxDE = calculateTax(100, 'DE');
+console.log(`  France: ${taxFR.subtotal}€ HT + ${taxFR.taxAmount}€ TVA = ${taxFR.total}€ TTC`);
+console.log(`  Allemagne: ${taxDE.subtotal}€ HT + ${taxDE.taxAmount}€ TVA = ${taxDE.total}€ TTC`);
+
+// ============================================
+// 3. MODULE SHIPPING - Frais de livraison
+// ============================================
+
+console.log('\n\n🚚 MODULE SHIPPING');
+console.log('═'.repeat(50));
+
+console.log('Livraison en France (commande 45€) :');
+const shippingFR = calculateShipping('FR', 45);
+console.log(`  Zone: ${shippingFR.zoneName}`);
+console.log(`  Livraison gratuite: ${shippingFR.freeShippingEligible ? 'Oui' : 'Non'}`);
+console.log(`  Il manque: ${shippingFR.amountForFreeShipping}€ pour la gratuité`);
+console.log(`  Options disponibles:`);
+shippingFR.rates.forEach(rate => {
+  console.log(`    - ${rate.name}: ${rate.price}€ (${formatDeliveryTime(rate.estimatedDays)})`);
+});
+
+console.log('\nLivraison en Allemagne (commande 80€) :');
+const shippingDE = calculateShipping('DE', 80);
+console.log(`  Zone: ${shippingDE.zoneName}`);
+console.log(`  Livraison gratuite: ${shippingDE.freeShippingEligible ? 'Oui ✓' : 'Non'}`);
+shippingDE.rates.forEach(rate => {
+  console.log(`    - ${rate.name}: ${rate.price === 0 ? 'GRATUIT' : rate.price + '€'}`);
 });
 
 // ============================================
-// 3. AJOUTER DES PRODUITS
+// 4. PANIER COMPLET
 // ============================================
 
-console.log('📦 Ajout des produits...');
-cart.addItem(tshirt, 2);    // 2 t-shirts
-cart.addItem(jean, 1);       // 1 jean
-cart.addItem(sneakers, 1);   // 1 paire de sneakers
+console.log('\n\n🛒 PANIER COMPLET');
+console.log('═'.repeat(50));
 
-// ============================================
-// 4. AFFICHER LE PANIER (sans réduction)
-// ============================================
+const products: Product[] = [
+  { id: '1', name: 'T-shirt Premium', price: 29.90, currency: 'EUR', status: 'available', stock: 100 },
+  { id: '2', name: 'Jean Slim', price: 59.90, currency: 'EUR', status: 'available', stock: 50 },
+  { id: '3', name: 'Sneakers', price: 89.90, currency: 'EUR', status: 'available', stock: 30 },
+];
 
-console.log('\n📋 PANIER SANS RÉDUCTION :');
-cart.displaySummary();
+const cart = new Cart({ currency: 'EUR', taxRate: 20, freeShippingThreshold: 100 });
 
-// ============================================
-// 5. APPLIQUER UN CODE PROMO
-// ============================================
+products.forEach(p => cart.addItem(p, 1));
 
-const promo: Discount = {
-  code: 'SOLDES20',
+const discount: Discount = {
+  code: 'BIENVENUE15',
   type: 'percentage',
-  value: 20,
+  value: 15,
   isActive: true,
 };
 
-console.log('\n\n🏷️  Application du code promo SOLDES20 (-20%)...');
-cart.applyDiscount(promo);
-
-// ============================================
-// 6. AFFICHER LE PANIER (avec réduction)
-// ============================================
-
-console.log('\n📋 PANIER AVEC RÉDUCTION :');
+cart.applyDiscount(discount);
 cart.displaySummary();
 
-// ============================================
-// 7. RÉCUPÉRER LES TOTAUX (pour une API par exemple)
-// ============================================
-
+// Résumé final
 const totals = cart.getTotals();
-console.log('\n\n📊 DONNÉES JSON (pour API) :');
+console.log('\n📊 Résumé pour export API :');
 console.log(JSON.stringify(totals, null, 2));
